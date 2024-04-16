@@ -3,9 +3,6 @@ source("src/common.R")
 if(!exists(".TREC_USER")) stop("Set variable .TREC_USER to you know what")
 if(!exists(".TREC_PASS")) stop("Set variable .TREC_PASS to you know what")
 
-library(future.apply)
-library(glue)
-
 for(year in .WEB_YEAR) {
   print(year)
   trec_edition <- year-1992+1
