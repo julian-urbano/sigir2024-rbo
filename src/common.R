@@ -1,3 +1,7 @@
+library(dplyr)
+library(glue)
+library(future.apply)
+
 .N_CPU <- parallelly::availableCores()
 future::plan(future::multisession(workers = .N_CPU))
 
@@ -10,7 +14,7 @@ read_inputs <- function(path, breaker = c("docid", "random"), topk = NULL) {
 
   f <- list.files(path, pattern = "\\.gz$", full.names = TRUE)
 
-  future_lapply(f, function(ff) {
+  future_lapply(f, future.seed = TRUE, function(ff) {
     d <- read.table(gzfile(ff), header = FALSE) |>
       rename_with(~c("topic","q0","doc","rank","score","sys")) |>
       select(-q0,-rank) |>
@@ -33,4 +37,20 @@ read_inputs <- function(path, breaker = c("docid", "random"), topk = NULL) {
     }
     d
   }) |> bind_rows()
+}
+
+extract_ranking <- function(docs, scores) {
+  i <- 1
+  prev <- scores[1]
+  r <- list(character(0))
+  while(i <= length(scores)) {
+    if(scores[i] == prev){
+      r[[length(r)]] <- c(r[[length(r)]], docs[i])
+    }else{
+      r[[length(r)+1]] <- docs[i]
+    }
+    prev <- scores[i]
+    i <- i+1
+  }
+  r
 }
