@@ -40,5 +40,5 @@ When using this archive, please cite this paper:
       booktitle = {International ACM SIGIR Conference on Research and Development in Information Retrieval},
       title = {{The Treatment of Ties in Rank-Biased Overlap}},
       year = {2024},
-	    pages = {xx--xx}
+      pages = {xx--xx}
     }

@@ -21,20 +21,6 @@ identify_SL <- function(x, y) {
 # - b: bottom ranks.
 flatten <- function(x) {
   id <- unlist(x)
-  t <- b <- numeric(0)
-
-  for(i in seq_along(x)) {
-    xx <- x[[i]]
-    n_xx <- length(xx)
-
-    t <- c(t, rep(length(t)+1, times = n_xx))
-    b <- c(b, rep(length(b)+n_xx, times = n_xx))
-  }
-
-  list(id = id, t = t, b = b)
-}
-flatten <- function(x) {
-  id <- unlist(x)
   t <- b <- numeric(length(id))
 
   r <- 0 # last rank
