@@ -5,7 +5,7 @@ library(ggplot2)
 theme_set(theme_bw() +
             theme(plot.subtitle = element_text(hjust = 0.5),
                   plot.margin = margin(0,5,0,5)))
-.W <- 7500
+.W <- 7000
 .RES <- 1000
 
 path <- "m:/Papers/rbo-paper/paper/"
@@ -51,9 +51,10 @@ d_trec <- lapply(.WEB_YEAR, function(year) {
   d <- rio::import(glue("output/rbo-trec/web{year}.csv"))
   d_stats <- rio::import(glue("output/trec-stats/web{year}.csv"))
 
-  left_join(d, d_stats, by = c("sys1"="sys", "topic"="topic"))
+  left_join(d, d_stats, by = c("sys1"="sys", "topic"="topic")) |>
+    left_join(d_stats, by = c("sys2"="sys","topic"="topic"), suffix = c("1","2"))
 }) |> bind_rows() |>
-  filter(n_t > 0) # only rankings with ties
+  filter(n_t1 > 0 & n_t2 > 0) # only rankings with ties
 
 d_trec |>
   filter(p == .9) |>
@@ -65,7 +66,7 @@ d_trec |>
 png(glue("{path}/breaker_trec_9.png"), width = .W/3, height = .W/3*.98, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbo_docid)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO~(random)$"), y = TeX("$RBO~(docID)$"), subtitle = "TREC data")
 dev.off()
@@ -84,7 +85,7 @@ d_syn |>
 png(glue("{path}/breaker_syn_9.png"), width = .W/3, height = .W/3*.98, res = .RES)
 d_syn |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbo_docid, alpha = abs(rbo_rand-rbo_docid))) +
-  geom_point(size = .25, shape = 19) +
+  geom_point(size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO~(random)$"), y = TeX("$RBO~(docID)$"), subtitle = "Synthetic data") +
   scale_alpha_continuous(range = c(.02,.5)) + # for better display of large differences
@@ -96,21 +97,21 @@ dev.off()
 png(glue("{path}/trec_random_scatter_w.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbow)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^w$"))
 dev.off()
 png(glue("{path}/trec_random_scatter_a.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rboa)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^a$"))
 dev.off()
 png(glue("{path}/trec_random_scatter_b.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbob)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"))
 dev.off()
@@ -118,21 +119,21 @@ dev.off()
 png(glue("{path}/trec_docid_scatter_w.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_docid, rbow)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^w$"))
 dev.off()
 png(glue("{path}/trec_docid_scatter_a.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_docid, rboa)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^a$"))
 dev.off()
 png(glue("{path}/trec_docid_scatter_b.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_trec |> filter(p == .9) |>
   ggplot(aes(rbo_docid, rbob)) +
-  geom_point(alpha = .5, size = .25, shape = 19) +
+  geom_point(alpha = .5, size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"))
 dev.off()
@@ -158,12 +159,62 @@ d_trec |>
             mean(diffb), max(diffb), sum(between(diffb,.01,.1)) / n(), sum(diffb>.1) / n()) |>
   round(2) |> as.data.frame()
 
+# Figure 5 #########################################################################################
+
+d_trec <- d_trec |>
+  mutate(n_ta = (n_t1/n1 + n_t2/n2)/2,
+         p_ia = (p_i1 + p_i2)/2)
+
+png(glue("{path}/trec_scatter_nt_1.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, n_ta < .25) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$ties<25\\%$"))
+dev.off()
+png(glue("{path}/trec_scatter_nt_2.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, .25 <= n_ta, n_ta < .75) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$25\\%\\leq ties<75\\%$"))
+dev.off()
+png(glue("{path}/trec_scatter_nt_3.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, .75 <= n_ta) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$75\\%\\leq ties$"))
+dev.off()
+
+png(glue("{path}/trec_scatter_pi_1.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, p_ia < .25) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$pot.imp.<25\\%$"))
+dev.off()
+png(glue("{path}/trec_scatter_pi_2.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, .25 <= p_ia, p_ia < .75) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$25\\%\\leq pot.imp.<75\\%$"))
+dev.off()
+png(glue("{path}/trec_scatter_pi_3.png"), width = .W/3, height = .W/3, res = .RES)
+d_trec |> filter(p == .9, .75 <= p_ia) |>
+  ggplot(aes(rbo_rand, rbob)) +
+  geom_point(alpha = .75, size = 1, stroke = NA) +
+  geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
+  labs(x = TeX("$RBO$"), y = TeX("$RBO^b$"), subtitle = TeX("$75\\%\\leq pot.imp.$"))
+dev.off()
+
 # Figure 6 #########################################################################################
 
 png(glue("{path}/syn_random_scatter_w.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_syn |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbow, alpha = abs(rbo_rand-rbow))) +
-  geom_point(size = .25, shape = 19) +
+  geom_point(size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^w$")) +
   scale_alpha_continuous(range = c(.02,.5)) + # for better display of large differences
@@ -172,7 +223,7 @@ dev.off()
 png(glue("{path}/syn_random_scatter_a.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_syn |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rboa, alpha = abs(rbo_rand-rboa))) +
-  geom_point(size = .25, shape = 19) +
+  geom_point(size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^a$")) +
   scale_alpha_continuous(range = c(.02,.5)) + # for better display of large differences
@@ -181,7 +232,7 @@ dev.off()
 png(glue("{path}/syn_random_scatter_b.png"), width = .W/3, height = .W/3*.9, res = .RES)
 d_syn |> filter(p == .9) |>
   ggplot(aes(rbo_rand, rbob, alpha = abs(rbo_rand-rbob))) +
-  geom_point(size = .25, shape = 19) +
+  geom_point(size = 1, stroke = NA) +
   geom_abline(intercept = 0, slope = 1, linewidth = .25, color = "red") +
   labs(x = TeX("$RBO$"), y = TeX("$RBO^b$")) +
   scale_alpha_continuous(range = c(.02,.5)) + # for better display of large differences
@@ -199,12 +250,3 @@ d_syn |>
             mean(diffa), max(diffa), sum(between(diffa,.01,.1)) / n(), sum(diffa>.1) / n(),
             mean(diffb), max(diffb), sum(between(diffb,.01,.1)) / n(), sum(diffb>.1) / n()) |>
   round(2) |> as.data.frame()
-# d_syn |>
-#   mutate(diffw = abs(rbo_docid-rbow),
-#          diffa = abs(rbo_docid-rboa),
-#          diffb = abs(rbo_docid-rbob)) |>
-#   group_by(p) |>
-#   summarize(mean(diffw), max(diffw), sum(between(diffw,.01,.1)) / n(), sum(diffw>.1) / n(),
-#             mean(diffa), max(diffa), sum(between(diffa,.01,.1)) / n(), sum(diffa>.1) / n(),
-#             mean(diffb), max(diffb), sum(between(diffb,.01,.1)) / n(), sum(diffb>.1) / n()) |>
-#   round(2) |> as.data.frame()
