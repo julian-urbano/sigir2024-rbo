@@ -1,5 +1,16 @@
 source("src/common.R")
 
+# calculates the potential impact of ties
+pi <- function(score, p = .9) {
+  n <- length(score)
+  d <- data.frame(score, rank = seq(n))
+  d |> group_by(score) |>
+    filter(n() > 1) |>
+    summarise(pi = sum(p^rank)) |>
+    summarise(pi = sum(pi) / sum(p^seq(n))) |>
+    pull(pi)
+}
+
 for(year in .WEB_YEAR) {
   print(year)
   # Read runs
@@ -20,8 +31,10 @@ for(year in .WEB_YEAR) {
         avg <- mean(x)
         avg_t <- mean(x[x > 1]) # only groups with ties
 
+        p_i <- pi(score)
+
         data.frame(n, n_u, n_t,
-                   avg, avg_t)
+                   avg, avg_t, p_i)
       }else{
         NA
       }
