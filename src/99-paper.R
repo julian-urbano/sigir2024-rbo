@@ -8,7 +8,7 @@ theme_set(theme_bw() +
 .W <- 7000
 .RES <- 1000
 
-path <- "m:/Papers/rbo-paper/paper/"
+path <- "output/figures/"
 dir.create(path, showWarnings = FALSE, recursive = TRUE)
 
 # Table 1 ##########################################################################################
