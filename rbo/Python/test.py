@@ -1,4 +1,4 @@
-exec(open('rbo/rbo.py').read())
+exec(open('rbo/Python/rbo.py').read())
 
 def assert_eq(obj, expected, digits = 6):
   assert round(obj, digits) == round(expected, digits)

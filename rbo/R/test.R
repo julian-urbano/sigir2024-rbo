@@ -1,6 +1,6 @@
 source("src/common.R")
 source("src/simulate.R")
-source("rbo/rbo.R")
+source("rbo/R/rbo.R")
 
 library(testthat)
 library(future.apply)

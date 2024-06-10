@@ -79,6 +79,13 @@ def extract_ranking(items, scores):
   will be grouped in a tie.
   This is useful for instance to extract the ranking of documents by their retrieval value.
   """
+  # Sort by score first
+  items = np.array(items)
+  scores = np.array(scores)
+  o = np.argsort(-scores)
+  items = items[o]
+  scores = scores[o]
+  
   r = [items[0]] 
   prev = scores[0]  # Keep track of the previous score
   i = 1
@@ -178,14 +185,14 @@ def rbo(x, y, p, ties = 'a', score = ('ext', 'min', 'max', 'res')):
   
   Parameters
   ----------
-  ties: 'a', 'b' or 'w'
-    Please see section 6 of the SIGIR 2024 paper to decide which one should be used. In summary:
+  ties: 'a' (default), 'b' or 'w'
+    Please see section 1.1 of the SIGIR 2024 paper to decide which one should be used. In summary:
       - When ties represent equality (i.e. sports rankings), use 'w'.
       - When ties represent uncertainty (i.e. don't know which items go first):
-        - Use 'a' (default) to compute the average RBO across permutations of the ties.
+        - Use 'a' to compute the average RBO across permutations of the ties.
         - Use 'b' if the RBO score should be corrected by the information lost due to ties.
         
-  score: tuple with any of 'ext', 'min', 'max' and 'res'
+  score: tuple with any of 'ext', 'min', 'max' and 'res' (all by default)
     - 'ext': extrapolate the agreement in the seen part to the unseen part.
     - 'min': lower bound by assuming no additional overlap in the unseen part.
     - 'max': upper bound by assuming maximum overlap in the unseen part.

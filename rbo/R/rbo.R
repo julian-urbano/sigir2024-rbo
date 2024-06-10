@@ -83,6 +83,11 @@ to_string <- function(r) {
 #' will be grouped in a tie.
 #' This is useful for instance to extract the ranking of documents by their retrieval value.
 extract_ranking <- function(items, scores) {
+  # Sort by score first
+  o <- order(scores, decreasing = TRUE)
+  items <- items[o]
+  scores <- scores[o]
+
   i <- 1
   prev <- scores[1]
   r <- list(character(0))
@@ -196,14 +201,14 @@ check_rbo <- function(x, y, p) {
 #'
 #' Parameters
 #' ----------
-#' ties: 'a', 'b' or 'w'
-#'   Please see section 6 of the SIGIR 2024 paper to decide which one should be used. In summary:
+#' ties: 'a' (default), 'b' or 'w'
+#'   Please see section 1.1 of the SIGIR 2024 paper to decide which one should be used. In summary:
 #'     - When ties represent equality (i.e. sports rankings), use 'w'.
 #'     - When ties represent uncertainty (i.e. don't know which items go first):
-#'       - Use 'a' (default) to compute the average RBO across permutations of the ties.
+#'       - Use 'a' to compute the average RBO across permutations of the ties.
 #'       - Use 'b' if the RBO score should be corrected by the information lost due to ties.
 #'
-#' score: vector with any of 'ext', 'min', 'max' and 'res'
+#' score: vector with any of 'ext', 'min', 'max' and 'res' (all by default)
 #'   - 'ext': extrapolate the agreement in the seen part to the unseen part.
 #'   - 'min': lower bound by assuming no additional overlap in the unseen part.
 #'   - 'max': upper bound by assuming maximum overlap in the unseen part.

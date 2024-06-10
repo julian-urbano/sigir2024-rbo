@@ -6,19 +6,7 @@ A [single ZIP file](https://github.com/julian-urbano/sigir2024rbo/archive/master
 
 ## Implementation of RBO
 
-File `rbo/rbo.R` contains a standalone implementation of all RBO coefficients presented in the paper ($RBO_{EXT}$, $RBO_{MIN}$, $RBO_{MAX}$ and $RBO_{RES}$) in all three tie-aware variants ($RBO^w$, $RBO^a$ and $RBO^b$).
-
-### What RBO variant should you use?
-
--   When a tie represents equality, so that tied items *really* occur at the same rank, you should compute $RBO^w$.
-
--   When a tie represents uncertainty, so that it is not known which item appears first:
-
-    -   Ties should not be broken deterministically, such as by doc ID, because it inflates $RBO$ scores.
-    -   Ties should not be broken at random because it introduces noise. $RBO^a$ should be used instead, as it precisely computes the expected $RBO$ when breaking ties at random.
-    -   If the measured overlap should be corrected by the amount of information lost due to ties, $RBO^b$ should be used. This ensures $RBO^b(X,X)=1$, and implies $RBO^a\leq RBO^b$.
-
-For more details, please refer to Section 1.1 of the paper.
+Folter `rbo/` contains standalone implementations of all RBO variants in R and Python. Please refer to the respective `README` files for reference.
 
 ## How to reproduce the results in the paper
 
