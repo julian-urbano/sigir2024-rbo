@@ -5,6 +5,36 @@ source("rbo/rbo.R")
 library(testthat)
 library(future.apply)
 
+# Test data ########################################################################################
+
+# Generate test data if it doesn't exsist. This help to test other implementations against rbo.R
+if(!file.exists("rbo/test.csv")) {
+  future_replicate(10000, future.seed = 0, {
+    p <- runif(1, .9, .99)
+    len <- sample(5:15, 2, replace = TRUE)
+    xy <- simulate_rankings(min(len), max(len),
+                            n = sum(len),
+                            frac_ties_x = runif(1, .25, 1), frac_ties_y = runif(1, .25, 1))
+    x <- xy$x
+    y <- xy$y
+    a <- list(unlist(x)) # x but fully tied
+    d <- lapply(y, function(yy) paste0("_", yy)) # fully non-conjoint
+
+    rbow <- rbo(x,y,p,"w")
+    rboa <- rbo(x,y,p,"a")
+    rbob <- rbo(x,y,p,"b")
+
+    data.frame(x = to_string(x),
+               y = to_string(y),
+               p = p,
+               w.ext = rbow["ext"], w.min = rbow["min"], w.max = rbow["max"], w.res = rbow["res"],
+               a.ext = rboa["ext"], a.min = rboa["min"], a.max = rboa["max"], a.res = rboa["res"],
+               b.ext = rbob["ext"], b.min = rbob["min"], b.max = rbob["max"], b.res = rbob["res"]
+    )
+  }, simplify = FALSE) |> bind_rows() -> test
+
+  rio::export(test, "rbo/test.csv")
+}
 
 # Test helper functions ############################################################################
 
@@ -26,10 +56,8 @@ expect_eq <- function(object, expected, digits = 6) {
                "    actual: {act$val}\n",
                "  expected: {exp$val}\n")
   )
-
   invisible(act$val)
 }
-
 # Expect **not** equal
 expect_neq <- function(object, expected, digits = 6) {
   act <- testthat::quasi_label(rlang::enquo(object))
@@ -45,10 +73,8 @@ expect_neq <- function(object, expected, digits = 6) {
                "    actual: {act$val}\n",
                "  expected: (not) {exp$val}\n")
   )
-
   invisible(act$val)
 }
-
 expect_between <- function(object, lower, upper, digits = 6) {
   act <- testthat::quasi_label(rlang::enquo(object))
   low <- testthat::quasi_label(rlang::enquo(lower))
@@ -65,18 +91,24 @@ expect_between <- function(object, lower, upper, digits = 6) {
                "    actual: {act$val}\n",
                "  expected: between {low$val} and {up$val}\n")
   )
-
   invisible(act$val)
 }
 
 # RBO utility functions ############################################################################
 
+identify_SL <- function(x, y) {
+  if(length(unlist(x)) > length(unlist(y)))
+    list(L = x, S = y)
+  else
+    list(L = y, S = x)
+}
+
 fill_max <- function(x, y, max_d) {
   sl <- identify_SL(x, y)
   preS <- sl$S
   preL <- sl$L
-  S <- flatten(sl$S)$id
-  L <- flatten(sl$L)$id
+  S <- flatten(preS)$id
+  L <- flatten(preL)$id
 
   ul <- us <- m <- S[0]
   d <- 1
@@ -131,8 +163,8 @@ fill_min <- function(x, y, max_d) {
   sl <- identify_SL(x, y)
   preS <- sl$S
   preL <- sl$L
-  S <- flatten(sl$S)$id
-  L <- flatten(sl$L)$id
+  S <- flatten(preS)$id
+  L <- flatten(preL)$id
 
   fillL <- paste("l", safeseq(length(L)+1, max_d), sep="")
   fillS <- paste("s", safeseq(length(S)+1, max_d), sep="")
@@ -144,14 +176,14 @@ fill_min <- function(x, y, max_d) {
 
 # Test RBO #########################################################################################
 
-future_replicate(1000, future.seed = 0, {
-  p <- runif(1, .9, .99)
-  len <- sample(5:15, 2, replace = TRUE)
-  xy <- simulate_rankings(min(len), max(len),
-                          n = sum(len),
-                          frac_ties_x = runif(1, .5, 1), frac_ties_y = runif(1, .5, 1))
-  x <- xy$x
-  y <- xy$y
+test <- rio::import("rbo/test.csv")
+
+furrr::future_pmap(test, .progress = TRUE, function(x, y, p,
+                                                    w.ext, w.min, w.max, w.res,
+                                                    a.ext, a.min, a.max, a.res,
+                                                    b.ext, b.min, b.max, b.res) {
+  x <- from_string(x)
+  y <- from_string(y)
   a <- list(unlist(x)) # x but fully tied
   d <- lapply(y, function(yy) paste0("_", yy)) # fully non-conjoint
 
@@ -161,6 +193,13 @@ future_replicate(1000, future.seed = 0, {
   e <- r[1] # ext
   m <- r[2] # min
   M <- r[3] # max
+  r <- r[4] # res
+
+  # reference
+  expect_eq(e, w.ext)
+  expect_eq(m, w.min)
+  expect_eq(M, w.max)
+  expect_eq(r, w.res)
 
   # consistency
   expect_between(e, m, M)
@@ -168,9 +207,9 @@ future_replicate(1000, future.seed = 0, {
   expect_between(M, 0, 1)
 
   # fills
-  fmin <- fill_min(x, y, max_d = 1000)
+  fmin <- fill_min(x, y, max_d = 2000)
   expect_eq(m, rbo(fmin$L, fmin$S, p, "w", "ext"))
-  fmax <- fill_max(x, y, max_d = 1000)
+  fmax <- fill_max(x, y, max_d = 2000)
   expect_eq(M, rbo(fmax$L, fmax$S, p, "w", "ext"))
 
   # edge cases: X with itself
@@ -197,6 +236,13 @@ future_replicate(1000, future.seed = 0, {
   e <- r[1] # ext
   m <- r[2] # min
   M <- r[3] # max
+  r <- r[4] # res
+
+  # reference
+  expect_eq(e, a.ext)
+  expect_eq(m, a.min)
+  expect_eq(M, a.max)
+  expect_eq(r, a.res)
 
   # consistency
   expect_between(e, m, M)
@@ -204,9 +250,9 @@ future_replicate(1000, future.seed = 0, {
   expect_between(M, 0, 1)
 
   # fills
-  fmin <- fill_min(x, y, max_d = 1000)
+  fmin <- fill_min(x, y, max_d = 2000)
   expect_eq(m, rbo(fmin$L, fmin$S, p, "a", "ext"))
-  fmax <- fill_max(x, y, max_d = 1000)
+  fmax <- fill_max(x, y, max_d = 2000)
   expect_eq(M, rbo(fmax$L, fmax$S, p, "a", "ext"))
 
   # edge cases: X with itself
@@ -233,6 +279,13 @@ future_replicate(1000, future.seed = 0, {
   e <- r[1] # ext
   m <- r[2] # min
   M <- r[3] # max
+  r <- r[4] # res
+
+  # reference
+  expect_eq(e, b.ext)
+  expect_eq(m, b.min)
+  expect_eq(M, b.max)
+  expect_eq(r, b.res)
 
   # consistency
   expect_between(e, m, M)
@@ -240,9 +293,9 @@ future_replicate(1000, future.seed = 0, {
   expect_between(M, 0, 1)
 
   # fills
-  fmin <- fill_min(x, y, max_d = 1000)
+  fmin <- fill_min(x, y, max_d = 2000)
   expect_eq(m, rbo(fmin$L, fmin$S, p, "b", "ext"))
-  fmax <- fill_max(x, y, max_d = 1000)
+  fmax <- fill_max(x, y, max_d = 2000)
   expect_eq(M, rbo(fmax$L, fmax$S, p, "b", "ext"))
 
   # edge cases: X with itself
