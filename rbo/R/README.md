@@ -1,6 +1,6 @@
 # Rank-Biased Overlap implementation in R
 
-File `rbo.R` contains a standalone implementation of the Rank-Biased Overlap rank similarity measure. Specifically, it can calculate all relevant scores ($RBO_{EXT}$, $RBO_{MIN}$, $RBO_{MAX}$ and $RBO_{RES}$) in all three tie-aware variants ($RBO^w$, $RBO^a$ and $RBO^b$), as defined in the following paper:
+File [`rbo.R`](./rbo.R) contains a standalone implementation of the Rank-Biased Overlap rank similarity measure. Specifically, it can calculate all relevant scores ($RBO_{EXT}$, $RBO_{MIN}$, $RBO_{MAX}$ and $RBO_{RES}$) in all three tie-aware variants ($RBO^w$, $RBO^a$ and $RBO^b$), as defined in the following paper:
 
 - M. Corsi and J. Urbano, "[The Treatment of Ties in Rank-Biased Overlap](http://julian-urbano.info/files/publications/068-treatment-ties-rank-biased-overlap.pdf)", *International ACM SIGIR Conference on Research and Development in Information Retrieval*, 2024.
 
