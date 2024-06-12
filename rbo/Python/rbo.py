@@ -210,8 +210,12 @@ def rbo(x, y, p, ties = 'a', score = ('ext', 'min', 'max', 'res')):
   s = len(S['id'])
   l = len(L['id'])
   
+  # If there are no ties, use w-variant for efficiency
+  if(np.all(S['t']==S['b']) and np.all(L['t']==L['b'])):
+    ties = 'w'
+    
   # Calculate individual item contributions
-  if 'w' in ties:
+  if ties == 'w':
     cS, cL, omega = cc_w(S, L)
   else:
     cS, cL, omega = cc_a(S, L)

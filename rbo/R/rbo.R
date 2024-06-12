@@ -226,6 +226,10 @@ rbo <- function(x, y, p, ties = c("a", "b", "w"), score = c("ext", "min", "max",
   s <- length(S$id)
   l <- length(L$id)
 
+  # If there are no ties, use w-variant for efficiency
+  if(all(S$t == S$b) && all(L$t == L$b))
+    ties <- "w"
+
   # Calculate individual item contributions
   if(ties == "w")
     CC <- cc.w(S, L)
