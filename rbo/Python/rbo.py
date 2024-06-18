@@ -37,7 +37,7 @@ def from_string(s):
   tie groups must be enclosed in parentheses. For example: "red (blue green) yellow pink".
   """
   if not isinstance(s, str) or not re.match(r"^(\w+|\(\w+( \w+)+\))( (\w+|\(\w+( \w+)+\)))*$", s):
-    raise ValueError("'s' must be string representation of a raking using alphanumeric characters")
+    raise ValueError("'s' must be a string representation of a ranking using alphanumeric characters")
   
   # separate letters, but retain ( and ) for groups
   g = re.split(' +', s)

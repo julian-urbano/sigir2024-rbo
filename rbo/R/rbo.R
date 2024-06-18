@@ -33,7 +33,7 @@
 from_string <- function(s) {
   if(!is.character(s) || !is.atomic(s) || !is.vector(s) || length(s) != 1 ||
      !grepl("^(\\w+|\\(\\w+( \\w+)+\\))( (\\w+|\\(\\w+( \\w+)+\\)))*$", s))
-    stop("'s' must be string representation of a raking using alphanumeric characters",
+    stop("'s' must be a string representation of a ranking using alphanumeric characters",
          call. = FALSE)
   # separate letters, but retain ( and ) for groups
   g <- strsplit(s, split = " +", perl = TRUE)[[1]]
